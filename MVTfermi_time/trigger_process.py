@@ -1045,14 +1045,14 @@ def main(config_dic, config_flag = False):
 
         mvt_all_summary_path = output_path / f"mvt_summary_bn{trigger_number}_{selection_str}_{(bin_width_ms)}ms.yaml"
         write_yaml(mvt_summary_all, mvt_all_summary_path)
-        lc_bw = 0.001
+        lc_bw = 0.01
         _, _, lc_plot, _, _ = generate_lightcurves(tte_list_path, src_interval, trange, lc_bw, energy_range_nai, combined=True, src_only=True)
         create_final_GBM_plot_with_MVT(
                 lc_plot,
                 t_start,
                 t_stop,
                 output_info,
-                bin_width_ms,
+                lc_bw*1000,
                 0,
                 mvt_summary_df=None,
                 )
@@ -1160,29 +1160,5 @@ if __name__ == '__main__':
 
 
 
-      
-"""
 
-if __name__ == '__main__':
-    # Set up the command-line argument parser
-    parser = argparse.ArgumentParser(
-        description="Run MVT analysis based on a YAML configuration file."
-    )
-    # Add one argument: the path to the config file
-    parser.add_argument(
-        'config_file',
-        type=str,
-        # NEW: Make the argument optional and provide a default value
-        nargs='?',
-        default=CONFIG_FILE,
-        help="Path to the simulation YAML configuration file. "
-             f"Defaults to '{CONFIG_FILE}' if not provided."
-    )
-    
-    # Parse the arguments provided by the user from the command line
-    args = parser.parse_args()
-    
-    # Call the main function, passing in the path to the config file
-    main(args.config_file)
-"""
 
