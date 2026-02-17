@@ -165,7 +165,7 @@ def generate_analysis_tasks(config: Dict[str, Any]) -> 'Generator':
                         sys.exit(1)
                     if detector_selections and base_dets != 'all' and sim_type == 'gbm':
                         logging.error(f"Configuration Error: 'detector_selections' is active, but simulation is for det='{base_dets}', not 'all'.")
-                        sys.exit(1)
+                        #sys.exit(1)
                     
                     param_dir_name = _create_param_directory_name(sim_type, pulse_shape, current_variable_params)
                     param_dir_path = data_path / sim_type / pulse_shape / param_dir_name

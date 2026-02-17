@@ -76,8 +76,10 @@ for i, data_file in enumerate(data_files):
     pulse_shape_nice = pulse_shape_name_dict.get(params['pulse_shape'], params['pulse_shape'])
     
     # --- 5. Recreate the original plot on the current subplot (ax) ---
-    ax.step(times, total_counts, where='mid', label='Total Signal', color='rosybrown', lw=1.5)
-    ax.fill_between(times, total_counts, step="mid", color='rosybrown', alpha=0.6)
+    ax.step(times, total_counts, where='mid', label='Total Signal', color='gray', lw=0.1)
+    #ax.fill_between(times, total_counts, step="mid", color='rosybrown', alpha=0.6)
+    ax.fill_between(times, total_counts, step="mid", color='gray', alpha=0.6)
+    #ax.fill_between(times, total_counts, step="mid", color='gray', alpha=0.6)
     
     ax.step(times, source_only_counts, where='mid', label='Source Signal', color='darkgreen', lw=1.5)
     ax.fill_between(times, source_only_counts, step="mid", color='darkgreen', alpha=0.4)

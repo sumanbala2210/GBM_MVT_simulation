@@ -1199,6 +1199,7 @@ def create_final_GBM_plot_with_MVT(
         ax.set_ylabel(f"Counts per {bin_width_ms:.1f} ms Bin", fontsize=12)
         ax.set_xlim(t_start, t_stop)
         ax.set_ylim(bottom=0)
+        ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         # --- Overlay MVT data ---
         if mvt_summary_df is not None and not mvt_summary_df.empty:
@@ -1235,6 +1236,7 @@ def create_final_GBM_plot_with_MVT(
             ax.legend(loc='upper left')
         else:
             ax.legend(loc='upper right')
+
         
         fig.tight_layout()
         
@@ -1293,7 +1295,14 @@ def calculate_mvt_statistics(results_df: pd.DataFrame, total_runs: int):
         padding = int(all_positive_runs['padding'].mean())
     except:
         padding = DEFAULT_PARAM_VALUE
-    
+
+    try:
+        t_start_analysis = float(all_positive_runs['t_start_analysis'].mean())
+        t_stop_analysis = float(all_positive_runs['t_stop_analysis'].mean())
+    except:
+        t_start_analysis = DEFAULT_PARAM_VALUE
+        t_stop_analysis = DEFAULT_PARAM_VALUE
+
     if np.isnan(position_window):
         position_window = DEFAULT_PARAM_VALUE
 
@@ -1311,6 +1320,8 @@ def calculate_mvt_statistics(results_df: pd.DataFrame, total_runs: int):
         'failed_runs': len(results_df) - len(valid_mvts),
         'position_window': position_window,
         'padding': padding,
+        't_start_analysis': round(t_start_analysis, 4),
+        't_stop_analysis': round(t_stop_analysis, 4)
     }
 
     # Extract SNR keys
@@ -3017,7 +3028,7 @@ def get_window_width(
     # ---------------------------------------------------------
     # 2. Piecewise mapping
     # ---------------------------------------------------------
-    for pulse_shape in ['gaussian', 'triangular', 'norris', 'fred', 'two_norris']:
+    for pulse_shape in ['gaussian', 'triangular', 'norris', 'fred']:
         if anchor_point in [0, 2]:
             # -------- START ANCHOR --------
             if src_percentile <= 50:
@@ -3093,6 +3104,7 @@ def _process_mvt_for_window(
     # Ensure the window is valid and clip to data boundaries
     t_start = max(t_start, common_params['t_start_data'] + common_params['duration'] / 50)
     t_stop = min(t_stop, common_params['t_stop_data'] - common_params['duration'] / 50)
+    
 
     if t_stop <= t_start:
         logging.warning(f"Skipped zero/negative length window for pos={pos}, padding={padding}")
@@ -3100,8 +3112,11 @@ def _process_mvt_for_window(
         mvt_err = DEFAULT_PARAM_VALUE
     else:
         try:
+            base_params['t_start_analysis'] = round(t_start, 3)
+            base_params['t_stop_analysis'] = round(t_stop, 3)
             # Create a plot for the second realization (i=1) to check the window
             if i == 1:
+                print(f"Realization {i}, Position {pos}, Padding {padding}: Analyzing window {round(t_start, 2)} to {round(t_stop, 2)}")
                 create_final_plot(
                     source_events=common_params['source_events'],
                     background_events=common_params['background_events'],
@@ -3118,6 +3133,7 @@ def _process_mvt_for_window(
                     src_flag=True
                 )
             
+            
             # Perform MVT analysis
             bins = np.arange(t_start, t_stop + bin_width_s, bin_width_s)
             total_events_window = total_events[(total_events >= t_start) & (total_events <= t_stop)]
@@ -3132,10 +3148,12 @@ def _process_mvt_for_window(
             mvt_val = mvt_res['mvt_ms']
             mvt_err = mvt_res['mvt_err_ms']
 
+
         except Exception as e:
             logging.warning(f"Failed MVT calculation for realization {i}, interval {round(t_start,2)}-{round(t_stop,2)}: {e}")
             mvt_val = DEFAULT_PARAM_VALUE
             mvt_err = DEFAULT_PARAM_VALUE
+
 
     # Assemble the final dictionary for this specific analysis window
     iter_detail = {
@@ -3173,6 +3191,7 @@ def Function_MVT_analysis_percentiles(input_info: Dict, output_info: Dict):
     base_params = input_info['base_params']
     NN_analysis = base_params['num_analysis']
     snr_timescales = analysis_settings.get('snr_timescales', [0.010, 0.016, 0.032, 0.064, 0.128])
+    position_windows = analysis_settings.get('position_windows', [1])
     bin_width_ms = input_info['bin_width_ms']
     src_percentile = base_params.get('src_percentile', 100)
     padding_percentile = base_params.get('padding_percentile', [10])
@@ -3281,18 +3300,18 @@ def Function_MVT_analysis_percentiles(input_info: Dict, output_info: Dict):
             }
 
             # --- Analysis Window 1: Midpoint ---
-            """
-            pos = 1
-            left_w, right_w = get_window_width(pulse_shape, pos, src_percentile, sim_params, duration)
-            t_start, t_stop = mid_point - left_w, mid_point + right_w
-            window_params = {'position_window': pos, 'padding': 0, 'src_percentile': src_percentile}
-            result = _process_mvt_for_window(t_start, t_stop, i, total_events, base_iter_detail, common_params, window_params)
-            iteration_results.append(result)
-            """
+            if 1 in position_windows:
+                pos = 1
+                left_w, right_w = get_window_width(pulse_shape, pos, src_percentile, sim_params, duration)
+                t_start, t_stop = mid_point - left_w, mid_point + right_w
+                window_params = {'position_window': pos, 'padding': 0, 'src_percentile': src_percentile}
+                result = _process_mvt_for_window(t_start, t_stop, i, total_events, base_iter_detail, common_params, window_params)
+                iteration_results.append(result)
+
 
             if pulse_shape in ['two_gaussian', 'two_norris']:
                 padding = 0
-                for pos in [3, 4, 33, 44]:
+                for pos in (p for p in [3, 4, 33, 44] if p in position_windows):
                     if pos == 3:
                         left_w, right_w = get_window_width(pulse_shape, pos, src_percentile, sim_params, duration)
                         t_start, t_stop = peak1 - left_w*100, peak1 + right_w
@@ -3312,9 +3331,9 @@ def Function_MVT_analysis_percentiles(input_info: Dict, output_info: Dict):
                     iteration_results.append(result)
 
 
-            """
+            
             # --- Analysis Windows 2 & 3: Start and End with Padding ---
-            for pos in [0, 2]:
+            for pos in (p for p in [0, 2] if p in position_windows):
                 for padding in padding_percentile:
                     window_width, shortest_scale = get_window_width(pulse_shape, pos, src_percentile, sim_params, duration)
                     if pos == 0: 
@@ -3327,7 +3346,7 @@ def Function_MVT_analysis_percentiles(input_info: Dict, output_info: Dict):
                     window_params = {'position_window': pos, 'padding': padding, 'src_percentile': src_percentile}
                     result = _process_mvt_for_window(t_start, t_stop, i, total_events, base_iter_detail, common_params, window_params)
                     iteration_results.append(result)
-            """
+            
 
             # --- Analysis Windows 2 & 3: Start and End with Padding ---
             
@@ -3407,6 +3426,7 @@ def Function_MVT_analysis_time_resolved(input_info: Dict,
     base_params = input_info['base_params']
     NN_analysis = base_params['num_analysis']
     snr_timescales = analysis_settings.get('snr_timescales', [0.010, 0.016, 0.032, 0.064, 0.128])
+    position_windows = analysis_settings.get('position_windows', [1])
     bin_width_ms = input_info['bin_width_ms']
 
     mvt_time_window = analysis_settings.get('mvt_time_window', 1.0)

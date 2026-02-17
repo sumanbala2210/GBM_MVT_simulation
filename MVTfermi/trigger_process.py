@@ -688,7 +688,7 @@ def full_analysis_workflow(trigger_num, trigger_dir, bin_width=0.064, config_dic
     # NEW: Extract individual SNRs and detector names for plotting
     individual_snr_values = [d['snr'] for d in ranked_detectors]
     # Extract short names like 'n0', 'n1', etc.
-    detector_names = [os.path.basename(d['file']).split('_')[2].upper() for d in ranked_detectors]
+    detector_names = [os.path.basename(d['file']).split('_')[2].lower() for d in ranked_detectors]
 
     # --- Plotting ---
     fig, ax = plt.subplots(figsize=(10, 7))
@@ -699,16 +699,16 @@ def full_analysis_workflow(trigger_num, trigger_dir, bin_width=0.064, config_dic
 
     # Plot the cumulative SNR as a line on top
     ax.plot(k_values, combined_snr_values, 'o-', color='royalblue', 
-            linewidth=2.5, markersize=8, label='Cumulative Combined SNR')
+            linewidth=2.5, markersize=14, label='Cumulative Combined SNR')
 
     # --- Aesthetics and Highlighting ---
     #ax.set_title(f'SNR Evolution for GRB {trigger_num}')
-    ax.set_xlabel('Detectors Added in Order of Rank')
-    ax.set_ylabel('Signal-to-Noise Ratio (SNR)')
-    
+    ax.set_xlabel('Detectors Added in Order of Rank', fontsize=18)
+    ax.set_ylabel('Signal-to-Noise Ratio (SNR)', fontsize=18)
+
     # NEW: Use detector names for the x-axis labels
     ax.set_xticks(k_values)
-    ax.set_xticklabels(detector_names, rotation=45, ha='right')
+    ax.set_xticklabels(detector_names, rotation=45, ha='right', fontsize=16)
     ax.grid(True, alpha=0.5, axis='y') # Grid on y-axis only for clarity
 
     # Highlight the maximum point
@@ -720,9 +720,9 @@ def full_analysis_workflow(trigger_num, trigger_dir, bin_width=0.064, config_dic
                 label=f'Optimal k={best_k} (SNR={best_snr:.2f})')
     ax.plot(best_k, best_snr, 'o', markersize=12, color='crimson', 
             fillstyle='none', markeredgewidth=2)
-    
-    ax.legend()
-    
+
+    ax.legend(fontsize=18)
+
     # --- Saving ---
     snr_evo_path = trigger_dir / f"snr_evolution_bn{trigger_num}_{int(bin_width*1000)}ms.pdf"
     fig.savefig(snr_evo_path)
@@ -1077,6 +1077,7 @@ def main(config_dic, config_flag = False):
     if config_flag:
         final_config_path = output_path / f"config_MVT_{trigger_number}_{det_string}_sim{total_sim}_{(bin_width_ms)}ms.yaml"
     else:
+        config_dic['email_flag'] = False
         final_config_path = trigger_directory / f"config_MVT_{trigger_number}.yaml"
     # Write the dictionary to the YAML file
     write_yaml(config_dic, final_config_path)

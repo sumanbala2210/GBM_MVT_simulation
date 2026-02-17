@@ -5,26 +5,19 @@ import ast
 
 now = datetime.now().strftime("%y_%m_%d-%H_%M")
 
-loc_dist = [
-
-    "Tri_BW_0.csv",
-    "Tri_BW_3.csv",
-    "Tri_BW_4.csv",
-    "Tri_BW_5.csv",
-    "Tri_BW_1.csv",
-]
 
 loc_dist = [
-    "Tri_BW_02.csv",
-    "Tri_BW_01.csv",
+    "Percentiles_final_summary_results-7.csv",
+    "Percentiles_final_summary_results-8.csv",
+    "Percentiles_final_summary_results-9.csv",
     
 ]
 
-path = os.path.join(os.getcwd(), "01_ANALYSIS_RESULTS")
+path = os.path.join(os.getcwd(), "01_ANALYSIS_RESULTS", "Tri_percentile")
 
 files = [os.path.join(path, loc) for loc in loc_dist]
 
-output_file = os.path.join(path, f"TRI_BW_AMP_ALL.csv")
+output_file = os.path.join(path, f"Tri_ALL_percentile.csv")
 drop_col_list = ['sim_det', 'analysis_det', 'base_det'] 
 
 # Collect DataFrames
@@ -34,7 +27,7 @@ for i, f in enumerate(files):
         df = pd.read_csv(f)
         if "sigma" in df.columns:
             df["sigma"] = df["sigma"] * 1000
-        if "width" in df.columns and i != 0:
+        if "width" in df.columns:
             df["width"] = df["width"] * 1000
         dfs.append(df)
     else:
@@ -45,10 +38,10 @@ if dfs:
     combined_df = pd.concat(dfs, ignore_index=True)
 
     # Convert analysis_det strings to lists
-    combined_df['analysis_det'] = combined_df['analysis_det'].apply(ast.literal_eval)
+    #combined_df['analysis_det'] = combined_df['analysis_det'].apply(ast.literal_eval)
 
     # Add column with number of detections
-    combined_df['num_analysis_det'] = combined_df['analysis_det'].apply(len)
+    #combined_df['num_analysis_det'] = combined_df['analysis_det'].apply(len)
 
     combined_df = combined_df.drop(columns=drop_col_list, errors='ignore')
 

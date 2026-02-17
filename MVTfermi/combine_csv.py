@@ -6,16 +6,15 @@ import ast
 now = datetime.now().strftime("%y_%m_%d-%H_%M")
 
 loc_dist = [
-    "run_0.1_25_09_14-08_55",
-    "run_5em4_25_09_14-10_48",
-    "run_1_25_09_14-09_11",
+    "run_1em3_25_09_15-20_23",
+    "run_1em3_25_09_15-20_37",
 ]
 
-path = os.path.join(os.getcwd(), "01_ANALYSIS_RESULTS_Tri")
+path = os.path.join(os.getcwd(), "01_ANALYSIS_RESULTS")
 
 files = [os.path.join(path, f"{loc}/final_summary_results.csv") for loc in loc_dist]
 
-output_file = os.path.join(path, f"Tri_BW_{now}.csv")
+output_file = os.path.join(path, f"Norris_10ms_{now}.csv")
 drop_col_list = ['sim_det', 'analysis_det', 'base_det'] 
 
 # Collect DataFrames
